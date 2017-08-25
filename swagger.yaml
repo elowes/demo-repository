@@ -1,0 +1,626 @@
+swagger: '2.0'
+info:
+  description: 描述股票信息接口，以及根据企业财报、研报及新闻报道进行财经文章辅助写作
+  version: v1
+  title: 股票写作接口
+  contact:
+    email: tracedeng@aidigger.com
+host: labs.aidigger.com
+basePath: /azoth/v1
+tags:
+  - name: service
+    description: 服务相关
+  - name: stock
+    description: 股票相关
+  - name: writings
+    description: 写作相关
+schemes:
+  - https
+  - http
+paths:
+  /healthz:
+    get:
+      tags:
+        - service
+      summary: 健康检查
+      description: 健康检查
+      operationId: check healthz
+      consumes:
+        - application/json
+      produces:
+        - text/plain
+      responses:
+        '200':
+          description: Ready go!
+          schema:
+            type: string
+            example: Ready go
+  /stock/completion:
+    get:
+      tags:
+        - stock
+      summary: 股票代码补全
+      description: 根据输入的股票代码部分前缀，返回推荐的股票代码
+      operationId: auto-completion
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: prefix
+          in: query
+          description: 股票前缀
+          required: true
+          type: string
+        - name: quantity
+          in: query
+          description: 推荐的数量
+          required: false
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: '成功返回推荐的股票 '
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Stock'
+  '/stock/annual/{code}':
+    get:
+      tags:
+        - stock
+      summary: 股票财报年度季度
+      description: 股票拥有的财报对应的年份及季度
+      operationId: annual-quarter
+      produces:
+        - application/json
+      parameters:
+        - name: code
+          in: path
+          description: 股票代码
+          required: true
+          type: string
+      responses:
+        '200':
+          description: 成功返回年份及季度
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Annual'
+  '/stock/k-line/{code}/{date}':
+    get:
+      tags:
+        - stock
+      summary: k线
+      description: 股票k线数据
+      operationId: k-line
+      produces:
+        - application/json
+      parameters:
+        - name: code
+          in: path
+          description: 股票代码
+          required: true
+          type: string
+        - name: date
+          in: path
+          description: 日期
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Kline'
+  '/stock/revenue/{code}/{date}/{type}/{table}':
+    get:
+      tags:
+        - stock
+      summary: 股票营收数据
+      description: 返回股票营收同比信息
+      operationId: revenue
+      produces:
+        - application/json
+      parameters:
+        - name: code
+          in: path
+          description: 类型
+          required: true
+          type: string
+        - name: date
+          in: path
+          description: 日期
+          required: true
+          type: string
+        - name: type
+          in: path
+          description: 股票编号
+          required: true
+          type: string
+        - name: table
+          in: path
+          description: 日期
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Revenue'
+  '/stock/news/{code}':
+    get:
+      tags:
+        - stock
+      summary: 股票相关新闻
+      description: 股票相关新闻
+      operationId: news
+      produces:
+        - application/json
+      parameters:
+        - name: code
+          in: path
+          description: 股票代码
+          required: true
+          type: string
+        - name: start
+          in: query
+          description: 起始索引
+          required: true
+          type: integer
+        - name: quantity
+          in: query
+          description: 新闻数量
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/News'
+  /writings/intent:
+    get:
+      tags:
+        - writings
+      summary: 支持的意图
+      description: 用户理解的意图列表
+      operationId: intent
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Intent'
+  /writings/templates:
+    get:
+      tags:
+        - writings
+      summary: 写作模版
+      description: 写作模版列表
+      operationId: template
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Template'
+  '/writings/title/{code}/{year}/{quarter}':
+    get:
+      tags:
+        - writings
+      summary: 文章标题
+      description: 文章标题并进行分词
+      operationId: title
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: code
+          description: 股票编码
+          required: true
+          type: string
+        - in: path
+          name: year
+          description: 年
+          required: true
+          type: string
+        - in: path
+          name: quarter
+          description: 季度
+          required: true
+          type: integer
+        - name: keyword
+          in: query
+          type: string
+          required: true
+          description: 关键字
+        - name: start
+          in: query
+          description: 起始索引
+          required: true
+          type: integer
+        - name: quantity
+          in: query
+          description: 数量
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Title'
+  '/writings/report/{code}/{year}/{quarter}/search':
+    get:
+      tags:
+        - writings
+      summary: 财报内容搜索
+      description: 关键字搜索财报内容
+      operationId: report search
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: code
+          description: 股票编码
+          required: true
+          type: string
+        - in: path
+          name: year
+          description: 年
+          required: true
+          type: string
+        - in: path
+          name: quarter
+          description: 季度
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Title'
+  '/writings/report/{code}/{year}/{quarter}/url':
+    get:
+      tags:
+        - writings
+      summary: 财报url
+      description: 财报pdf存放的地址
+      operationId: report url
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: code
+          description: 股票编码
+          required: true
+          type: string
+        - in: path
+          name: year
+          description: 年
+          required: true
+          type: string
+        - in: path
+          name: quarter
+          description: 季度
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Url'
+  '/writings/report/{code}/{year}/{quarter}/content':
+    get:
+      tags:
+        - writings
+      summary: 财报内容
+      description: 财报内容
+      operationId: report content
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: code
+          description: 股票编码
+          required: true
+          type: string
+        - in: path
+          name: year
+          description: 年
+          required: true
+          type: string
+        - in: path
+          name: quarter
+          description: 季度
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            $ref: '#/definitions/Content'
+  '/writings/paragraph/{code}/{year}/{quarter}/{intent}':
+    get:
+      tags:
+        - writings
+      summary: 意图推荐段落
+      description: 根据意图推荐段落
+      operationId: paragraph
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: code
+          description: 股票编码
+          required: true
+          type: string
+        - in: path
+          name: year
+          description: 年
+          required: true
+          type: string
+        - in: path
+          name: quarter
+          description: 季度
+          required: true
+          type: integer
+        - in: path
+          name: intent
+          description: 意图编号
+          required: true
+          type: integer
+        - in: query
+          name: qunatity
+          description: 段落数量
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Paragraph'
+definitions:
+  Revenue:
+    type: object
+    properties:
+      code:
+        type: string
+        example: '300359'
+        description: 股票代码
+      date:
+        type: string
+        example: '2017-08-01'
+        description: 日期
+      open:
+        type: number
+        example: 12.71
+        description: 开盘价
+      status:
+        type: string
+        description: Order Status
+        enum:
+          - placed
+          - approved
+          - delivered
+      complete:
+        type: boolean
+        default: false
+    xml:
+      name: Order
+  Kline:
+    type: object
+    properties:
+      code:
+        type: string
+        example: '300359'
+        description: 股票代码
+      date:
+        type: string
+        example: '2017-08-01'
+        description: 日期
+      open:
+        type: number
+        example: 12.71
+        description: 开盘价
+      close:
+        type: number
+        example: 12.51
+        description: 收盘价
+      low:
+        type: number
+        example: 12.26
+        description: 最低价
+      high:
+        type: number
+        example: 12.82
+        description: 最高价
+      volume:
+        type: integer
+        format: int32
+        example: 269685
+        description: 成交量
+  News:
+    type: object
+    properties:
+      total:
+        type: integer
+        format: int32
+        example: 10
+        description: 新闻条数
+      articles:
+        type: array
+        items:
+          $ref: '#/definitions/Article'
+        description: 新闻
+    xml:
+      name: User
+  Article:
+    type: object
+    properties:
+      headline:
+        type: string
+        description: 标题
+        example: 【财报季】全通教育前三季度营收6.29亿元，四大业务群业绩持续增长
+      summary:
+        type: string
+        description: 标题
+        example: 第三季度净利润624.89万元，同比增长1055.21%
+      keywords:
+        type: array
+        items:
+          type: string
+        example:
+          - A股
+          - 财报季
+          - 上市公司
+          - 全通教育
+        description: 关键字
+      content:
+        type: string
+        description: 内容
+        example: >-
+          芥末堆讯，10月26日，全通教育发布2016年第三季度报告，本季度营收为2.22亿元，同比增长188.88%；归属于上市公司股东净利润 
+          624.89万元，同比增长1055.21%。前三季度总营收6.29亿元，同比增长189.61%；归属于上市公司股东的净利润为4215.77万元，同比增长27.79%。
+
+          报告称，营业收入增长主要是由于：
+
+          EdSaaS业务收入增加
+
+          因企业合并导致继续教育业务收入增加
+
+          家校互动升级业务收入增加
+
+          2016年，全通教育聚焦
+
+          “全课云+和教育”双平台战略
+
+          ，构建了以EdSaas业务为核心的
+
+          家校互动升级业务、EdSaas业务、学科升学业务及继续教育业务四大业务群
+
+          。
+      pubdate:
+        type: string
+        description: 发布日期
+        example: '2016-10-27T12:36:50'
+      timestamp:
+        type: string
+        description: 时间戳
+        example: '2017-07-12T16:42:01.881334'
+  Annual:
+    type: object
+    properties:
+      year:
+        type: string
+        example: '2017'
+      quarter:
+        type: array
+        items:
+          type: integer
+          format: int32
+        example:
+          - 0
+          - 1
+          - 2
+          - 3
+        description: 季度列表
+  Stock:
+    type: object
+    required:
+      - name
+      - type
+      - code
+    properties:
+      name:
+        type: string
+        example: 全通教育
+      type:
+        type: string
+        example: hushen
+        description: 股票板块，沪深、新三版
+      code:
+        type: string
+        example: '300359'
+  Intent:
+    type: object
+    properties:
+      code:
+        type: integer
+        description: 意图编码
+        example: 1
+      content:
+        type: string
+        description: 意图描述
+        example: 展望
+  Template:
+    type: object
+    properties:
+      code:
+        type: integer
+        description: 模版编码
+        example: 1
+      style:
+        type: string
+        description: 模版风格
+        example: 券商风格
+      guideline:
+        type: string
+        description: 行文导向
+        example: 财务数据分析导向
+      intents:
+        type: array
+        items:
+          $ref: '#/definitions/Intent'
+  Title:
+    type: object
+    properties:
+      words:
+        type: array
+        items:
+          type: string
+        example:
+          - 全通
+          - 教育
+          - 2017年
+          - Q1
+          - 财报
+        description: 标题分词
+  Url:
+    type: object
+    properties:
+      url:
+        type: string
+        description: 财报地址
+        example: 'http://disclosure.szse.cn/finalpage/2017-04-26/1203386046.PDF'
+  Content:
+    type: object
+    properties:
+      content:
+        type: string
+        description: 财报内容
+        example: content of markdown file
+  Paragraph:
+    type: object
+    properties:
+      words:
+        type: array
+        items:
+          type: string
+        example:
+          - 全通
+          - 教育
+          - 2017年
+          - Q1
+          - 财报
+        description: 段落分词
